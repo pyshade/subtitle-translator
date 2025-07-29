@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Flex, Card, Button, Typography, Input, Upload, Form, Space, message, Select, Modal, Checkbox, Progress, Tooltip, Radio, Switch, Spin } from "antd";
 import { CopyOutlined, DownloadOutlined, InboxOutlined, UploadOutlined } from "@ant-design/icons";
-import { splitTextIntoLines, getTextStats, downloadFile, generateSafeFileName, getISO639Code } from "@/app/utils";
+import { splitTextIntoLines, getTextStats, downloadFile, generateSafeFileName, parseSubtitleContent, convertToFormat, getAvailableFormats, isConversionSupported } from "@/app/utils";
 import { VTT_SRT_TIME, LRC_TIME_REGEX, detectSubtitleFormat, getOutputFileExtension, filterSubLines, convertTimeToAss, assHeader } from "@/app/utils/subtitleUtils";
+import { FormatSelector } from "@/app/components/FormatSelector";
 import { categorizedOptions, findMethodLabel } from "@/app/components/translateAPI";
 import { useLanguageOptions, filterLanguageOption } from "@/app/components/languages";
 import { useCopyToClipboard } from "@/app/hooks/useCopyToClipboard";
@@ -74,11 +75,26 @@ const SubtitleTranslator = () => {
   const [bilingualSubtitle, setBilingualSubtitle] = useState(false);
   const [bilingualPosition, setBilingualPosition] = useState("below"); // 'above' or 'below'
   const [contextAwareTranslation, setContextAwareTranslation] = useState(true); // 上下文感知翻译开关
+  const [outputFormat, setOutputFormat] = useState<string>(""); // Output format selection
+  const [detectedFormat, setDetectedFormat] = useState<string>(""); // Detected input format
 
   useEffect(() => {
     setExtractedText("");
     setTranslatedText("");
-  }, [sourceText]);
+    
+    // Detect format when source text changes
+    if (sourceText.trim()) {
+      const lines = splitTextIntoLines(sourceText);
+      const format = detectSubtitleFormat(lines);
+      if (format !== "error") {
+        setDetectedFormat(format);
+        // Set default output format to detected format if not already set
+        if (!outputFormat) {
+          setOutputFormat(format);
+        }
+      }
+    }
+  }, [sourceText, outputFormat]);
 
   const performTranslation = async (sourceText: string, fileNameSet?: string, fileIndex?: number, totalFiles?: number, isSubtitleMode: boolean = true) => {
     const lines = splitTextIntoLines(sourceText);
@@ -223,14 +239,21 @@ const SubtitleTranslator = () => {
           finalSubtitle = [...translatedTextArray.slice(0, contentIndices[0]), ...styleBlockLines, ...translatedTextArray.slice(contentIndices[0])].join("\n");
         }
 
+        // Convert format if needed
+        const finalFormat = outputFormat || fileType;
+        let finalContent = finalSubtitle;
+        
+        if (fileType !== finalFormat && isConversionSupported(fileType, finalFormat)) {
+          finalContent = convertSubtitleFormat(finalSubtitle, fileType, finalFormat);
+        }
+
         // Create language-specific file name for download with ISO 639-1 compliance
         const fileName = fileNameSet || multipleFiles[0]?.name || "subtitle";
-        const fileExtension = getOutputFileExtension(fileType, bilingualSubtitle);
-        const downloadFileName = generateSafeFileName(fileName, currentTargetLang, fileExtension);
+        const downloadFileName = generateSafeFileName(fileName, currentTargetLang, fileType, finalFormat);
 
         // Always download in multi-language mode
         if (multiLanguageMode || multipleFiles.length > 1) {
-          await downloadFile(finalSubtitle, downloadFileName);
+          await downloadFile(finalContent, downloadFileName);
         }
 
         if (!multiLanguageMode || (multiLanguageMode && currentTargetLang === targetLanguagesToUse[0])) {
@@ -283,17 +306,39 @@ const SubtitleTranslator = () => {
     messageApi.success(tSubtitle("translationComplete"), 10);
   };
 
+  const convertSubtitleFormat = (content: string, fromFormat: string, toFormat: string): string => {
+    if (fromFormat === toFormat || !isConversionSupported(fromFormat, toFormat)) {
+      return content;
+    }
+    
+    try {
+      const entries = parseSubtitleContent(content, fromFormat);
+      return convertToFormat(entries, toFormat, bilingualSubtitle);
+    } catch (error) {
+      console.error('Format conversion failed:', error);
+      messageApi.error(t('formatConversionError') || 'Format conversion failed');
+      return content;
+    }
+  };
+
   const handleExportFile = () => {
     const uploadFileName = multipleFiles[0]?.name;
     const lines = splitTextIntoLines(sourceText);
     const fileType = detectSubtitleFormat(lines);
 
-    // Generate ISO 639-1 compliant filename
-    const fileExtension = getOutputFileExtension(fileType, bilingualSubtitle);
-    const baseFileName = uploadFileName || "subtitle";
-    const fileName = generateSafeFileName(baseFileName, targetLanguage, fileExtension);
+    // Convert format if needed
+    const finalFormat = outputFormat || fileType;
+    let finalContent = translatedText;
     
-    downloadFile(translatedText, fileName);
+    if (fileType !== finalFormat && isConversionSupported(fileType, finalFormat)) {
+      finalContent = convertSubtitleFormat(translatedText, fileType, finalFormat);
+    }
+
+    // Generate ISO 639-1 compliant filename with output format
+    const baseFileName = uploadFileName || "subtitle";
+    const fileName = generateSafeFileName(baseFileName, targetLanguage, fileType, finalFormat);
+    
+    downloadFile(finalContent, fileName);
     return fileName;
   };
 
@@ -425,6 +470,16 @@ const SubtitleTranslator = () => {
             )}
           </Space>
         </Form.Item>
+        {detectedFormat && (
+          <Form.Item label={t("outputFormat") || "Output Format"}>
+            <FormatSelector
+              currentFormat={detectedFormat}
+              selectedFormat={outputFormat || detectedFormat}
+              onFormatChange={setOutputFormat}
+              disabled={translateInProgress}
+            />
+          </Form.Item>
+        )}
         <Form.Item label={t("advancedSettings")}>
           <Space wrap>
             <Tooltip title={t("singleFileModeTooltip")}>

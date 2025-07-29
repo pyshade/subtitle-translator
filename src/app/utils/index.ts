@@ -5,6 +5,7 @@ import { DataContext, DataProvider } from "./DataContext";
 import { preprocessJson, stripJsonWrapper } from "./jsonUtils";
 import { loadFromLocalStorage, saveToLocalStorage } from "./localStorageUtils";
 import { generateTranslatedFileName, generateSafeFileName, isValidISO639Code, getISO639Code } from "./filenameUtils";
+import { parseSubtitleContent, convertToFormat, getAvailableFormats, isConversionSupported } from "./formatConverter";
 
 export { 
   splitTextIntoLines, 
@@ -22,5 +23,9 @@ export {
   generateTranslatedFileName,
   generateSafeFileName,
   isValidISO639Code,
-  getISO639Code
+  getISO639Code,
+  parseSubtitleContent,
+  convertToFormat,
+  getAvailableFormats,
+  isConversionSupported
 };

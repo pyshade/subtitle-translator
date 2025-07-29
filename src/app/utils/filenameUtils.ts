@@ -22,12 +22,14 @@ export const isValidISO639Code = (languageCode: string): boolean => {
  * @param originalFileName - The original file name (with or without extension)
  * @param languageCode - The target language code (ISO 639-1)
  * @param fileExtension - The file extension (e.g., 'srt', 'vtt')
+ * @param outputFormat - Optional output format override
  * @returns Formatted filename or null if language code is invalid
  */
 export const generateTranslatedFileName = (
   originalFileName: string,
   languageCode: string,
-  fileExtension: string
+  fileExtension: string,
+  outputFormat?: string
 ): string | null => {
   // Validate language code
   if (!isValidISO639Code(languageCode)) {
@@ -41,10 +43,13 @@ export const generateTranslatedFileName = (
     ? originalFileName.slice(0, lastDotIndex) 
     : originalFileName;
   
+  // Use output format if provided, otherwise use the original file extension
+  const finalExtension = outputFormat || fileExtension;
+  
   // Ensure extension doesn't have leading dot
-  const cleanExtension = fileExtension.startsWith('.') 
-    ? fileExtension.slice(1) 
-    : fileExtension;
+  const cleanExtension = finalExtension.startsWith('.') 
+    ? finalExtension.slice(1) 
+    : finalExtension;
   
   // Generate filename with pattern: filename_{languageCode}.extension
   return `${fileNameWithoutExt}_${languageCode}.${cleanExtension}`;
@@ -70,14 +75,16 @@ export const getISO639Code = (languageValue: string): string | null => {
  * @param originalFileName - Original filename
  * @param languageCode - Target language code
  * @param fileExtension - File extension
+ * @param outputFormat - Optional output format override
  * @returns Valid filename or fallback filename
  */
 export const generateSafeFileName = (
   originalFileName: string,
   languageCode: string,
-  fileExtension: string
+  fileExtension: string,
+  outputFormat?: string
 ): string => {
-  const validFileName = generateTranslatedFileName(originalFileName, languageCode, fileExtension);
+  const validFileName = generateTranslatedFileName(originalFileName, languageCode, fileExtension, outputFormat);
   
   if (validFileName) {
     return validFileName;
@@ -89,9 +96,12 @@ export const generateSafeFileName = (
   const fileNameWithoutExt = lastDotIndex !== -1 
     ? originalFileName.slice(0, lastDotIndex) 
     : originalFileName;
-  const cleanExtension = fileExtension.startsWith('.') 
-    ? fileExtension.slice(1) 
-    : fileExtension;
+  
+  // Use output format if provided, otherwise use the original file extension
+  const finalExtension = outputFormat || fileExtension;
+  const cleanExtension = finalExtension.startsWith('.') 
+    ? finalExtension.slice(1) 
+    : finalExtension;
   
   return `${fileNameWithoutExt}_translated.${cleanExtension}`;
 };
