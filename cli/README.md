@@ -137,6 +137,18 @@ yarn cli config --method openai --target it -o custom-config.json
 - **VTT** - WebVTT
 - **LRC** - LyRiCs
 
+### Convenzione Nomi File
+
+I file tradotti vengono salvati con codici lingua ISO 639-1 aggiunti al nome originale:
+- `movie.srt` → `movie_es.srt` (Spagnolo)
+- `subtitle.vtt` → `subtitle_fr.vtt` (Francese)
+- `video.ass` → `video_ja.ass` (Giapponese)
+
+**Standard Codici Lingua:**
+- Tutti i codici lingua seguono lo standard ISO 639-1
+- Codici lingua non validi attiveranno un pattern di denominazione di fallback
+- I sottotitoli bilingue usano il suffisso `_bilingual` invece del codice lingua
+
 ### Codici Lingua Supportati
 
 | Codice | Lingua |
