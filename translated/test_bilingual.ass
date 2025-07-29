@@ -1,0 +1,24 @@
+1
+00:00:01,000 --> 00:00:04,000
+Hello, welcome to our subtitle translator!
+Hola, ¡Bienvenido a nuestro traductor de subtítulos!
+
+2
+00:00:05,000 --> 00:00:08,000
+This is a sample subtitle file for testing.
+Este es un archivo de subtítulo de muestra para las pruebas.
+
+3
+00:00:09,000 --> 00:00:12,000
+You can translate this to any language you want.
+Puedes traducir esto a cualquier idioma que quieras.
+
+4
+00:00:13,000 --> 00:00:16,000
+The CLI tool supports batch processing.
+La herramienta CLI admite el procesamiento por lotes.
+
+5
+00:00:17,000 --> 00:00:20,000
+Thank you for using our tool!
+¡Gracias por usar nuestra herramienta!

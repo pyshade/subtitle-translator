@@ -1,0 +1,11 @@
+1
+00:00:01,000 --> 00:00:03,000
+Willkommen im Film.
+
+2
+00:00:04,000 --> 00:00:06,000
+Dies ist die erste Szene.
+
+3
+00:00:07,000 --> 00:00:09,000
+Genieße es zu sehen!

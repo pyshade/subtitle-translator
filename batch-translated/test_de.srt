@@ -1,0 +1,19 @@
+1
+00:00:01,000 --> 00:00:04,000
+Hallo, willkommen in unserem Untertitelübersetzer!
+
+2
+00:00:05,000 --> 00:00:08,000
+Dies ist eine Beispieluntertiteldatei zum Testen.
+
+3
+00:00:09,000 --> 00:00:12,000
+Sie können dies in jede gewünschte Sprache übersetzen.
+
+4
+00:00:13,000 --> 00:00:16,000
+Das CLI -Tool unterstützt die Stapelverarbeitung.
+
+5
+00:00:17,000 --> 00:00:20,000
+Vielen Dank, dass Sie unser Tool verwendet haben!

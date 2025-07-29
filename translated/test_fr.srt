@@ -1,0 +1,19 @@
+1
+00:00:01,000 --> 00:00:04,000
+Bonjour, bienvenue dans notre traducteur de sous-titre!
+
+2
+00:00:05,000 --> 00:00:08,000
+Il s'agit d'un exemple de fichier de sous-titre pour les tests.
+
+3
+00:00:09,000 --> 00:00:12,000
+Vous pouvez traduire cela dans n'importe quelle langue que vous souhaitez.
+
+4
+00:00:13,000 --> 00:00:16,000
+L'outil CLI prend en charge le traitement par lots.
+
+5
+00:00:17,000 --> 00:00:20,000
+Merci d'utiliser notre outil!

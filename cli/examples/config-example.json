@@ -1,0 +1,31 @@
+{
+  "translationMethod": "gtxFreeAPI",
+  "sourceLanguage": "auto",
+  "targetLanguage": "it",
+  "bilingualSubtitle": false,
+  "outputDir": "./translated",
+  "apiConfigs": {
+    "deepl": {
+      "apiKey": "your-deepl-api-key-here",
+      "url": "",
+      "chunkSize": 128000,
+      "delayTime": 200,
+      "limit": 20
+    },
+    "openai": {
+      "apiKey": "your-openai-api-key-here",
+      "model": "gpt-4o-mini",
+      "temperature": 1.3,
+      "limit": 20
+    },
+    "google": {
+      "apiKey": "your-google-api-key-here",
+      "delayTime": 200,
+      "limit": 100
+    }
+  },
+  "llmPrompts": {
+    "system": "You are a professional subtitle translator. Translate the given subtitle text accurately while preserving timing and formatting. Maintain the original meaning and context.",
+    "user": "Translate the following subtitle text from ${sourceLanguage} to ${targetLanguage}. Only return the translated text without any additional explanation or formatting:\n\n${content}"
+  }
+}

@@ -22,6 +22,7 @@ export const TRANSLATION_SERVICES = [
   },
   { value: "siliconflow", label: "SiliconFlow", docs: "https://docs.siliconflow.cn/api-reference/chat-completions/chat-completions" },
   { value: "groq", label: "Groq", docs: "https://console.groq.com/docs/text-chat" },
+  { value: "openrouter", label: "OpenRouter", docs: "https://openrouter.ai/docs/quick-start" },
   { value: "llm", label: "Custom LLM" },
   //{ value: "webgoogletranslate", label: "GTX Web (Free&Slow)" },
 ];
@@ -33,7 +34,7 @@ export const findMethodLabel = (method) => {
 
 type TranslationMethod = (typeof TRANSLATION_SERVICES)[number]["value"];
 
-export const LLM_MODELS = ["deepseek", "openai", "azureopenai", "siliconflow", "groq", "llm"];
+export const LLM_MODELS = ["deepseek", "openai", "azureopenai", "siliconflow", "groq", "openrouter", "llm"];
 
 export const categorizedOptions = [
   ...TRANSLATION_SERVICES.filter((s) => !LLM_MODELS.includes(s.value)),
@@ -92,6 +93,14 @@ export const defaultConfigs = {
     temperature: 1.3,
     limit: 20,
   },
+  openrouter: {
+    apiKey: "",
+    model: "deepseek/deepseek-chat-v3-0324:free",
+    temperature: 1.3,
+    limit: 20,
+    siteUrl: "",
+    siteName: "",
+  },
   llm: {
     url: "http://127.0.0.1:11434/v1/chat/completions",
     apiKey: "",
@@ -142,6 +151,8 @@ interface TranslateTextParams {
   temperature?: number;
   sysPrompt?: string;
   userPrompt?: string;
+  siteUrl?: string;
+  siteName?: string;
 }
 
 // 定义翻译缓存前缀
@@ -466,6 +477,40 @@ const translationServices = {
         model: model,
         temperature: Number(temperature),
         stream: false,
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
+  },
+
+  openrouter: async (params: TranslateTextParams) => {
+    const { text, targetLanguage, sourceLanguage, apiKey, model, temperature, sysPrompt, userPrompt, siteUrl, siteName } = params;
+    const prompt = getAIModelPrompt(text, userPrompt, targetLanguage, sourceLanguage);
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    };
+
+    // Add optional headers for OpenRouter rankings
+    if (siteUrl?.trim()) {
+      headers["HTTP-Referer"] = siteUrl;
+    }
+    if (siteName?.trim()) {
+      headers["X-Title"] = siteName;
+    }
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: sysPrompt },
+          { role: "user", content: prompt },
+        ],
+        model: model,
+        temperature: Number(temperature),
       }),
     });
 

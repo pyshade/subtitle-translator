@@ -13,6 +13,7 @@
 Compared to traditional subtitle translation tools, Subtitle Translator excels with its **batch processing, high-speed translation, translation caching, and automatic format adaptation**, significantly improving workflow efficiency. It is ideal for use in film and TV, education, and content creation.  
 
 👉 **Try it online**: <https://tools.newzone.top/en/subtitle-translator>  
+👉 **CLI Interface**: Use the command-line tool for automation and batch processing
 
 ## Key Features
 
@@ -145,3 +146,68 @@ yarn build:lang zh-hant
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `src/app/[locale]/page.tsx`. The page auto-updates as you edit the file.
+## Command Line Interface (CLI)
+
+Subtitle Translator also provides a powerful CLI for automation and batch processing.
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Make CLI executable (optional)
+chmod +x cli/index.js
+```
+
+### Usage
+
+#### Basic Translation
+
+```bash
+# Translate a single file
+npm run cli translate input.srt -t it
+
+# Translate with custom output directory
+npm run cli translate input.srt -t es -o ./output
+
+# Translate entire directory
+npm run cli translate ./subtitles -t fr
+
+# Create bilingual subtitles
+npm run cli translate input.srt -t de -b
+```
+
+#### Advanced Usage
+
+```bash
+# Use configuration file
+npm run cli config -o my-config.json
+npm run cli translate input.srt --config my-config.json
+
+# Dry run (preview without changes)
+npm run cli translate input.srt --dry-run -t ja
+
+# Use specific translation service
+npm run cli translate input.srt -t ko -m deepl -k YOUR_API_KEY
+```
+
+#### Available Commands
+
+- `translate <input>` - Translate subtitle files
+- `detect <file>` - Detect subtitle format
+- `list-methods` - List available translation methods
+- `config` - Generate configuration file template
+
+#### Supported Translation Methods
+
+- **gtxFreeAPI** - Google Translate (Free, Default)
+- **deepl** - DeepL API
+- **google** - Google Translate API
+- **openai** - OpenAI GPT
+- **azure** - Azure Translator
+- **deepseek** - DeepSeek AI
+- **groq** - Groq AI
+- And more...
+
+For detailed CLI documentation, see [cli/README.md](cli/README.md).
