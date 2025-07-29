@@ -66,8 +66,51 @@ yarn cli config -o my-config.json
 | `-k, --api-key <key>` | Chiave API per il servizio | - |
 | `-o, --output <path>` | Directory di output | `./translated` |
 | `-b, --bilingual` | Crea sottotitoli bilingue | `false` |
-| `--config <path>` | File di configurazione | - |
+| `--format <format>` | Formato di output (srt, ass, vtt, lrc, auto) | `auto` |
+| `--encoding <encoding>` | Codifica del file di output | `utf8` |
+| `--parallel <number>` | Numero di traduzioni parallele (1-10) | `3` |
+| `--delay <ms>` | Ritardo tra chiamate API in millisecondi | `1000` |
+| `--config <path>` | File di configurazione JSON | - |
 | `--dry-run` | Anteprima senza modifiche | `false` |
+| `-v, --verbose` | Output dettagliato per debug | `false` |
+
+### Variabili d'Ambiente
+
+La CLI supporta variabili d'ambiente per le chiavi API:
+
+```bash
+export DEEPL_API_KEY="your-deepl-key"
+export OPENAI_API_KEY="your-openai-key"
+export GOOGLE_API_KEY="your-google-key"
+export AZURE_API_KEY="your-azure-key"
+export DEEPSEEK_API_KEY="your-deepseek-key"
+export GROQ_API_KEY="your-groq-key"
+export SILICONFLOW_API_KEY="your-siliconflow-key"
+export OPENROUTER_API_KEY="your-openrouter-key"
+```
+
+### Esempi Avanzati
+
+```bash
+# Traduzione con controllo del parallelismo
+yarn cli translate input.srt -t zh --parallel 5 --delay 2000
+
+# Output dettagliato per debug
+yarn cli translate input.srt -t ru -v
+
+# Usa variabili d'ambiente per le chiavi API
+export DEEPL_API_KEY="your-key-here"
+yarn cli translate input.srt -t pt -m deepl
+
+# Rilevamento formato con dettagli
+yarn cli detect input.srt -v
+
+# Lista metodi con documentazione
+yarn cli list-methods -v
+
+# Configurazione personalizzata
+yarn cli config --method openai --target it -o custom-config.json
+```
 
 ### Metodi di Traduzione Supportati
 

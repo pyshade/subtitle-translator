@@ -3,6 +3,7 @@ const path = require('path');
 const { detectSubtitleFormat, filterSubLines, getOutputFileExtension } = require('./utils/subtitleUtils');
 const { TranslationService } = require('./utils/translateAPI');
 const { processFiles, createOutputDir } = require('./utils/fileUtils');
+const { generateSafeFileName } = require('./utils/filenameUtils');
 
 class SubtitleTranslator {
   constructor(options = {}) {
@@ -62,7 +63,12 @@ class SubtitleTranslator {
       const translatedLines = await this.translationService.translateBatch(
         contentLines,
         this.options.sourceLanguage,
-        this.options.targetLanguage
+        this.options.targetLanguage,
+        {
+          parallel: this.options.parallel,
+          delay: this.options.delay,
+          verbose: this.options.verbose
+        }
       );
 
       // Generate output
@@ -110,12 +116,16 @@ class SubtitleTranslator {
   getOutputPath(inputPath, format) {
     const parsedPath = path.parse(inputPath);
     const extension = getOutputFileExtension(format, this.options.bilingualSubtitle);
-    const suffix = this.options.bilingualSubtitle ? '_bilingual' : `_${this.options.targetLanguage}`;
     
-    return path.join(
-      this.options.outputDir,
-      `${parsedPath.name}${suffix}.${extension}`
-    );
+    // Generate ISO 639-1 compliant filename
+    let fileName;
+    if (this.options.bilingualSubtitle) {
+      fileName = `${parsedPath.name}_bilingual.${extension}`;
+    } else {
+      fileName = generateSafeFileName(parsedPath.name, this.options.targetLanguage, extension);
+    }
+    
+    return path.join(this.options.outputDir, fileName);
   }
 
   async translateDirectory(dirPath) {
@@ -161,6 +171,11 @@ async function translateSubtitles(input, options) {
     targetLanguage: options.target || config.targetLanguage || 'en',
     bilingualSubtitle: options.bilingual || config.bilingualSubtitle || false,
     outputDir: options.output || config.outputDir || './translated',
+    outputFormat: options.format || config.outputFormat || 'auto',
+    encoding: options.encoding || config.encoding || 'utf8',
+    parallel: parseInt(options.parallel) || config.parallel || 3,
+    delay: parseInt(options.delay) || config.delay || 1000,
+    verbose: options.verbose || config.verbose || false,
     dryRun: options.dryRun || false,
     apiConfigs: config.apiConfigs || {},
     llmPrompts: config.llmPrompts || {}
@@ -173,25 +188,54 @@ async function translateSubtitles(input, options) {
     console.log('Final options:', translatorOptions);
   }
 
-  // Add API key if provided
+  // Add API key from CLI option or environment variable
+  const method = translatorOptions.translationMethod;
+  if (!translatorOptions.apiConfigs[method]) {
+    translatorOptions.apiConfigs[method] = {};
+  }
+  
+  // Priority: CLI option > config file > environment variable
   if (options.apiKey) {
-    const method = translatorOptions.translationMethod;
-    if (!translatorOptions.apiConfigs[method]) {
-      translatorOptions.apiConfigs[method] = {};
-    }
     translatorOptions.apiConfigs[method].apiKey = options.apiKey;
+  } else if (!translatorOptions.apiConfigs[method].apiKey) {
+    // Check environment variables
+    const envKeys = {
+      deepl: process.env.DEEPL_API_KEY,
+      openai: process.env.OPENAI_API_KEY,
+      google: process.env.GOOGLE_API_KEY,
+      azure: process.env.AZURE_API_KEY,
+      deepseek: process.env.DEEPSEEK_API_KEY,
+      groq: process.env.GROQ_API_KEY,
+      siliconflow: process.env.SILICONFLOW_API_KEY,
+      openrouter: process.env.OPENROUTER_API_KEY
+    };
+    
+    if (envKeys[method]) {
+      translatorOptions.apiConfigs[method].apiKey = envKeys[method];
+      if (translatorOptions.verbose) {
+        console.log(`🔑 Using API key from environment variable for ${method}`);
+      }
+    }
   }
 
   const translator = new SubtitleTranslator(translatorOptions);
 
-  console.log('Starting subtitle translation...');
-  console.log(`Method: ${translatorOptions.translationMethod}`);
-  console.log(`Source: ${translatorOptions.sourceLanguage} → Target: ${translatorOptions.targetLanguage}`);
-  console.log(`Output: ${translatorOptions.outputDir}`);
+  console.log('🚀 Starting subtitle translation...');
+  console.log(`📡 Method: ${translatorOptions.translationMethod}`);
+  console.log(`🌐 Translation: ${translatorOptions.sourceLanguage} → ${translatorOptions.targetLanguage}`);
+  console.log(`📁 Output: ${translatorOptions.outputDir}`);
+  console.log(`⚙️  Format: ${translatorOptions.outputFormat}`);
+  console.log(`🔄 Parallel: ${translatorOptions.parallel} files`);
+  
+  if (translatorOptions.bilingualSubtitle) {
+    console.log('🌍 Mode: Bilingual subtitles');
+  }
   
   if (translatorOptions.dryRun) {
-    console.log('DRY RUN MODE - No files will be modified');
+    console.log('🔍 DRY RUN MODE - No files will be modified');
   }
+  
+  console.log(''); // Empty line for better readability
 
   const inputStat = fs.statSync(input);
   

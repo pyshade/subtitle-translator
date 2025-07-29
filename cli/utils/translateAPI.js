@@ -220,26 +220,42 @@ class TranslationService {
     return data.choices[0].message.content.trim();
   }
 
-  async translateBatch(texts, sourceLanguage, targetLanguage) {
+  async translateBatch(texts, sourceLanguage, targetLanguage, options = {}) {
     const results = [];
-    const batchSize = 5; // Process in small batches to avoid rate limits
+    const batchSize = options.parallel || 3; // Configurable batch size
+    const delay = options.delay || 1000; // Configurable delay
+    const verbose = options.verbose || false;
+    
+    if (verbose) {
+      console.log(`  🔄 Processing ${texts.length} lines in batches of ${batchSize}`);
+    }
     
     for (let i = 0; i < texts.length; i += batchSize) {
       const batch = texts.slice(i, i + batchSize);
-      const batchPromises = batch.map(text => 
-        this.translateText(text, sourceLanguage, targetLanguage)
+      const batchPromises = batch.map((text, index) => 
+        this.translateText(text, sourceLanguage, targetLanguage).catch(error => {
+          if (verbose) {
+            console.log(`    ⚠️  Failed to translate line ${i + index + 1}: ${error.message}`);
+          }
+          return text; // Return original text on error
+        })
       );
       
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
       
       // Add delay between batches
-      if (i + batchSize < texts.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (i + batchSize < texts.length && delay > 0) {
+        if (verbose) {
+          console.log(`    ⏱️  Waiting ${delay}ms before next batch...`);
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
       
       // Progress indicator
-      console.log(`  Progress: ${Math.min(i + batchSize, texts.length)}/${texts.length} lines translated`);
+      const progress = Math.min(i + batchSize, texts.length);
+      const percentage = Math.round((progress / texts.length) * 100);
+      console.log(`  📊 Progress: ${progress}/${texts.length} lines (${percentage}%)`);
     }
     
     return results;

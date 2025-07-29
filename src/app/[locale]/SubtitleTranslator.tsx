@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Flex, Card, Button, Typography, Input, Upload, Form, Space, message, Select, Modal, Checkbox, Progress, Tooltip, Radio, Switch, Spin } from "antd";
 import { CopyOutlined, DownloadOutlined, InboxOutlined, UploadOutlined } from "@ant-design/icons";
-import { splitTextIntoLines, getTextStats, downloadFile } from "@/app/utils";
+import { splitTextIntoLines, getTextStats, downloadFile, generateSafeFileName, getISO639Code } from "@/app/utils";
 import { VTT_SRT_TIME, LRC_TIME_REGEX, detectSubtitleFormat, getOutputFileExtension, filterSubLines, convertTimeToAss, assHeader } from "@/app/utils/subtitleUtils";
 import { categorizedOptions, findMethodLabel } from "@/app/components/translateAPI";
 import { useLanguageOptions, filterLanguageOption } from "@/app/components/languages";
@@ -223,13 +223,10 @@ const SubtitleTranslator = () => {
           finalSubtitle = [...translatedTextArray.slice(0, contentIndices[0]), ...styleBlockLines, ...translatedTextArray.slice(contentIndices[0])].join("\n");
         }
 
-        // Create language-specific file name for download
-        const langLabel = currentTargetLang;
-        const fileExtension = `.${getOutputFileExtension(fileType, bilingualSubtitle)}`;
+        // Create language-specific file name for download with ISO 639-1 compliance
         const fileName = fileNameSet || multipleFiles[0]?.name || "subtitle";
-        const lastDotIndex = fileName.lastIndexOf(".");
-        const fileNameWithoutExt = lastDotIndex !== -1 ? fileName.slice(0, lastDotIndex) : fileName;
-        const downloadFileName = `${fileNameWithoutExt}_${langLabel}${fileExtension}`;
+        const fileExtension = getOutputFileExtension(fileType, bilingualSubtitle);
+        const downloadFileName = generateSafeFileName(fileName, currentTargetLang, fileExtension);
 
         // Always download in multi-language mode
         if (multiLanguageMode || multipleFiles.length > 1) {
@@ -291,11 +288,11 @@ const SubtitleTranslator = () => {
     const lines = splitTextIntoLines(sourceText);
     const fileType = detectSubtitleFormat(lines);
 
-    // 如果 bilingualSubtitle 为 true，则优先使用 .ass
-    const fileExtension = `.${getOutputFileExtension(fileType, bilingualSubtitle)}`;
-
-    // 如果文件名存在，查找最后一个点的位置，如果存在则替换扩展名，否则直接添加
-    const fileName = uploadFileName ? uploadFileName.replace(/\.[^/.]+$/, "") + fileExtension : `subtitle${fileExtension}`;
+    // Generate ISO 639-1 compliant filename
+    const fileExtension = getOutputFileExtension(fileType, bilingualSubtitle);
+    const baseFileName = uploadFileName || "subtitle";
+    const fileName = generateSafeFileName(baseFileName, targetLanguage, fileExtension);
+    
     downloadFile(translatedText, fileName);
     return fileName;
   };

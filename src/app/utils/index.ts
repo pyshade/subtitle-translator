@@ -4,5 +4,23 @@ import { downloadFile } from "./fileUtils";
 import { DataContext, DataProvider } from "./DataContext";
 import { preprocessJson, stripJsonWrapper } from "./jsonUtils";
 import { loadFromLocalStorage, saveToLocalStorage } from "./localStorageUtils";
+import { generateTranslatedFileName, generateSafeFileName, isValidISO639Code, getISO639Code } from "./filenameUtils";
 
-export { splitTextIntoLines, cleanLines, truncate, getTextStats, copyToClipboard, downloadFile, DataContext, DataProvider, preprocessJson, stripJsonWrapper, loadFromLocalStorage, saveToLocalStorage };
+export { 
+  splitTextIntoLines, 
+  cleanLines, 
+  truncate, 
+  getTextStats, 
+  copyToClipboard, 
+  downloadFile, 
+  DataContext, 
+  DataProvider, 
+  preprocessJson, 
+  stripJsonWrapper, 
+  loadFromLocalStorage, 
+  saveToLocalStorage,
+  generateTranslatedFileName,
+  generateSafeFileName,
+  isValidISO639Code,
+  getISO639Code
+};
